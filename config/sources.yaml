@@ -1,0 +1,31 @@
+# Oh My Skills - 数据源配置
+
+# GitHub 仓库列表
+# 可以随时添加新的仓库来扩展技能来源
+repositories:
+  - name: "Ai-Agent-Skills"
+    owner: "skillcreatorai"
+    repo: "Ai-Agent-Skills"
+    skills_path: "skills"
+    description: "社区精选的 AI 代理技能"
+    
+  - name: "anthropics-skills"
+    owner: "anthropics"
+    repo: "skills"
+    skills_path: "skills"
+    description: "Anthropic 官方技能示例"
+
+# 支持的 AI 工具格式
+formats:
+  - name: "Claude"
+    path: ".claude/skills"
+  - name: "Cursor"
+    path: ".cursor/skills"
+  - name: "Codex"
+    path: ".codex/skills"
+  - name: "Gemini"
+    path: ".gemini/skills"
+  - name: "Windsurf"
+    path: ".windsurf/skills"
+  - name: "Roo"
+    path: ".roo/skills"
