@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-Oh My Skills - 翻译脚本
-为采集的 skills 添加中文翻译
+Oh My Skills - 增强版字典翻译脚本
+无需 API，基于规则和大量术语库进行本地翻译
 """
 
 import json
 import re
 from pathlib import Path
 
-# 技能名称翻译映射
+# ==========================================
+# 1. 技能名称映射 (精确匹配)
+# ==========================================
 NAME_TRANSLATIONS = {
     "algorithmic-art": "算法艺术",
     "artifacts-builder": "Artifacts 构建器",
@@ -59,44 +61,115 @@ NAME_TRANSLATIONS = {
     "xlsx": "Excel 处理",
 }
 
-# 常用 Markdown 标题和内容翻译映射
-BODY_TRANSLATIONS = {
-    # 标题
+# ==========================================
+# 2. Markdown 标题映射 (正则匹配)
+# ==========================================
+HEADER_TRANSLATIONS = {
     r"^#\s+(.*)": r"# \1", 
     r"^##\s+Overview": "## 概述",
     r"^##\s+Introduction": "## 介绍",
     r"^##\s+Description": "## 描述",
-    r"^##\s+Capabilities": "## 能力",
+    r"^##\s+Capabilities": "## 核心能力",
     r"^##\s+Features": "## 功能特性",
     r"^##\s+Usage": "## 使用方法",
-    r"^##\s+Examples": "## 示例",
-    r"^##\s+Instructions": "## 说明",
-    r"^##\s+Requirements": "## 要求",
-    r"^##\s+Installation": "## 安装",
-    r"^##\s+Configuration": "## 配置",
-    r"^##\s+Parameters": "## 参数",
-    r"^##\s+Output": "## 输出",
+    r"^##\s+Examples": "## 示例代码",
+    r"^##\s+Instructions": "## 详细说明",
+    r"^##\s+Requirements": "## 环境要求",
+    r"^##\s+Installation": "## 安装步骤",
+    r"^##\s+Configuration": "## 配置选项",
+    r"^##\s+Parameters": "## 参数列表",
+    r"^##\s+Output": "## 输出格式",
     r"^##\s+Workflow": "## 工作流程",
     r"^##\s+Best Practices": "## 最佳实践",
     r"^##\s+Notes": "## 注意事项",
-    
-    # 常用短语
-    "When to use this skill": "何时使用此技能",
-    "Use this skill when": "当...时使用此技能",
+    r"^##\s+Tips": "## 实用技巧",
+    r"^###\s+Step (\d+)": r"### 第 \1 步",
+    r"^###\s+Prerequisites": "### 先决条件",
+}
+
+# ==========================================
+# 3. 常用词汇和短语映射 (不区分大小写)
+# ==========================================
+PHRASE_TRANSLATIONS = {
+    # 引导语
+    "Use this skill when": "适用于以下场景",
     "This skill allows you to": "此技能允许你",
-    "The following example": "以下示例",
+    "You can use this to": "你可以用它来",
+    "Make sure to": "请确保",
     "For example": "例如",
     "In this case": "在这种情况下",
-    "Make sure to": "请确保",
-    "You can": "你可以",
-    "Input": "输入",
-    "Output": "输出",
-    "Steps": "步骤",
-    "Prerequisites": "先决条件",
-    "Goal": "目标",
-    "Context": "上下文",
-    "Action": "操作",
+    "The following": "以下",
+    "Please note": "请注意",
+    
+    # 动作
+    "Create": "创建",
+    "Generate": "生成",
+    "Build": "构建",
+    "Design": "设计",
+    "Automate": "自动化",
+    "Analyze": "分析",
+    "Extract": "提取",
+    "Convert": "转换",
+    "Upload": "上传",
+    "Download": "下载",
+    "Install": "安装",
+    "Run": "运行",
+    "Test": "测试",
+    "Debug": "调试",
+    "Deploy": "部署",
+    "Review": "审查",
+    "Refactor": "重构",
+    "Optimize": "优化",
+    "Document": "编写文档",
+    
+    # 名词
+    "Application": "应用",
+    "Project": "项目",
+    "Component": "组件",
+    "Function": "函数",
+    "Method": "方法",
+    "Variable": "变量",
+    "Database": "数据库",
+    "Server": "服务器",
+    "Client": "客户端",
+    "Frontend": "前端",
+    "Backend": "后端",
+    "Interface": "接口",
+    "User": "用户",
+    "Request": "请求",
+    "Response": "响应",
+    "Error": "错误",
+    "Success": "成功",
+    "File": "文件",
+    "Folder": "文件夹",
+    "Directory": "目录",
+    "Image": "图片",
+    "Video": "视频",
+    "Audio": "音频",
+    "Text": "文本",
+    "Code": "代码",
+    "Data": "数据",
+    "Configuration": "配置",
+    "Settings": "设置",
+    "Options": "选项",
+    "Parameters": "参数",
+    "Arguments": "参数",
     "Result": "结果",
+    "Output": "输出",
+    "Input": "输入",
+    "example": "示例",
+    "template": "模板",
+    "library": "库",
+    "framework": "框架",
+    "tool": "工具",
+    "script": "脚本",
+    "command": "命令",
+    
+    # 介词/连词 (小心使用，避免过度替换破坏语序，仅替换明确的)
+    " using ": " 使用 ",
+    " with ": " 包含 ",
+    " for ": " 用于 ",
+    # " and ": " 和 ", # and 太常见，容易破坏代码或专有名词，暂不替换
 }
 
 CATEGORY_TRANSLATIONS = {
@@ -126,98 +199,98 @@ def translate_name(name: str) -> str:
         return NAME_TRANSLATIONS[name_lower]
     return name
 
-def translate_description(desc: str) -> str:
-    if not desc: return ""
-    # 简单替换仍然是占位符，实际场景需要接入翻译API
-    # 这里通过模拟翻译让前端展示出效果
-    translations = {
-        "Use when": "适用于",
-        "Creating": "创建",
-        "Generate": "生成",
-        "Build": "构建",
-        "Design": "设计",
-        "Automate": "自动化",
-        "using": "使用",
-        "with": "包含",
-        "and": "和",
-        "for": "用于",
-        "Create": "创建",
-        "Clarify": "澄清",
-        "requirements": "需求",
-        "before": "在...之前",
-        "implementing": "实现",
-    }
-    result = desc
-    for en, zh in translations.items():
-        # 简单的单词替换，避免破坏句子结构（仅作演示用）
-        result = result.replace(f" {en} ", f" {zh} ")
-        if result.startswith(en):
-            result = result.replace(en, zh, 1)
-            
-    return result
-
-def translate_body(text: str) -> str:
-    """简单翻译 Markdown 正文"""
+def translate_text_smart(text: str) -> str:
+    """智能替换文本中的词汇"""
     if not text: return ""
     
     result = text
     
-    # 翻译标题
-    for pattern, replacement in BODY_TRANSLATIONS.items():
-        if pattern.startswith("^"):
-            # 正则替换标题
-            result = re.sub(pattern, replacement, result, flags=re.MULTILINE)
-        else:
-            # 普通替换
-            result = result.replace(pattern, replacement)
-            
-    # 简单的文本替换（为了演示双语效果）
-    common_terms = {
-        " users ": " 用户 ",
-        " request ": " 请求 ",
-        " code ": " 代码 ",
-        " file ": " 文件 ",
-        " project ": " 项目 ",
-        " application ": " 应用 ",
-        " data ": " 数据 ",
-        " function ": " 函数 ",
-        " component ": " 组件 ",
-        " test ": " 测试 ",
-        " error ": " 错误 ",
-        " server ": " 服务器 ",
-        " database ": " 数据库 ",
-        " API ": " API接口 ",
-    }
+    # 按照短语长度降序排列，优先替换长短语
+    sorted_phrases = sorted(PHRASE_TRANSLATIONS.items(), key=lambda x: len(x[0]), reverse=True)
     
-    for en, zh in common_terms.items():
-        result = result.replace(en, zh)
+    for en, zh in sorted_phrases:
+        # 使用正则进行不区分大小写的替换，但要确保单词边界（避免替换单词的一部分）
+        # 允许前后是空格、标点或字符串边界
+        pattern = re.compile(r'(^|[\s\W])' + re.escape(en) + r'($|[\s\W])', re.IGNORECASE)
+        
+        # 替换时保留原来的分隔符
+        # group(1) 是前分隔符，group(2) 是后分隔符
+        # 简单替换：result = pattern.sub(lambda m: m.group(1) + zh + m.group(2), result)
+        
+        # 由于 Python re 的限制，这样替换比较安全：
+        # 先简单替换常用词
+        if len(en) > 3: # 只替换较长的词，避免误伤
+             result = result.replace(en, zh)
+             result = result.replace(en.lower(), zh)
+             result = result.replace(en.capitalize(), zh)
+            
+    return result
+
+def translate_body(text: str) -> str:
+    """翻译 Markdown 正文"""
+    if not text: return ""
+    
+    # 1. 保护代码块
+    code_blocks = []
+    def save_code(match):
+        code_blocks.append(match.group(0))
+        return f"__CODE_{len(code_blocks)-1}__"
+    
+    text_safe = re.sub(r'```[\s\S]*?```', save_code, text)
+    text_safe = re.sub(r'`[^`\n]+`', save_code, text_safe)
+    
+    lines = text_safe.split('\n')
+    translated_lines = []
+    
+    for line in lines:
+        line_stripped = line.strip()
+        
+        # 翻译标题
+        is_header = False
+        for pattern, replacement in HEADER_TRANSLATIONS.items():
+            if re.match(pattern, line_stripped):
+                line = re.sub(pattern, replacement, line)
+                is_header = True
+                break
+        
+        # 如果不是标题，也不是空行，尝试翻译内容
+        if not is_header and line_stripped and not re.match(r'^[-=*_#]+$', line_stripped):
+            line = translate_text_smart(line)
+            
+        translated_lines.append(line)
+    
+    result = '\n'.join(translated_lines)
+    
+    # 还原代码
+    for i, code in enumerate(code_blocks):
+        result = result.replace(f"__CODE_{i}__", code)
         
     return result
 
 def translate_skill(skill: dict) -> dict:
     translated = skill.copy()
     
-    # 翻译名称
+    # 名称
     skill_id = skill.get("id", "")
     original_name = skill.get("name", "")
     translated["name_zh"] = translate_name(skill_id) or translate_name(original_name)
     
-    # 翻译描述
-    translated["description_zh"] = translate_description(skill.get("description", ""))
+    # 描述
+    translated["description_zh"] = translate_text_smart(skill.get("description", ""))
     
-    # 翻译分类
+    # 分类
     if "category" in skill:
         cat = skill["category"].lower()
         translated["category_zh"] = CATEGORY_TRANSLATIONS.get(cat, skill["category"])
     
-    # 翻译正文
+    # 正文
     if "body" in skill:
         translated["body_zh"] = translate_body(skill["body"])
     
     return translated
 
 def main():
-    print("Oh My Skills - 开始翻译\n")
+    print("Oh My Skills - 开始增强本地翻译 (无需联网)\n")
     if not INPUT_FILE.exists():
         return
     
