@@ -13,6 +13,16 @@ const FORMATS = [
 ]
 
 function generateSkillMd(skill) {
+    const body = skill.body || ''
+
+    // 检查 body 是否已经包含 YAML Frontmatter
+    if (body.trim().startsWith('---')) {
+        // 如果已经有 frontmatter，直接返回原始内容（确保最真实地还原 GitHub 文件）
+        // 这里的假设是 GitHub 上的 SKILL.md 已经是完整的、可用的格式
+        return body
+    }
+
+    // 如果没有 frontmatter，则手动构建标准格式
     const description = skill.description || ''
     // 转义引号
     const safeDescription = description.replace(/"/g, '\\"')
@@ -24,7 +34,7 @@ description: "${safeDescription}"
 
 # ${skill.name}
 
-${skill.body || skill.description || ''}
+${body || description || ''}
 `
 }
 
