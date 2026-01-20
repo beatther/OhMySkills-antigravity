@@ -1,5 +1,5 @@
 .download-section {
-    margin-top: var(--spacing-xl);
+    display: inline-block;
 }
 
 .download-btn {
@@ -14,15 +14,48 @@
     border-radius: var(--radius-lg);
     cursor: pointer;
     transition: var(--transition-normal);
+    border: none;
 }
 
-.download-btn:hover {
+.download-btn:hover:not(:disabled) {
     box-shadow: var(--shadow-glow);
     transform: translateY(-2px);
+}
+
+.download-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.download-btn.downloading {
+    background: var(--color-bg-tertiary);
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .download-hint {
     margin-top: var(--spacing-sm);
     font-size: var(--font-size-xs);
     color: var(--color-text-muted);
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-lg);
 }

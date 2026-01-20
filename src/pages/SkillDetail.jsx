@@ -60,38 +60,41 @@ function SkillDetail() {
 
                 <h1 className="skill-title">
                     <BilingualBlock
-                        chinese={skill.name_zh || skill.name}
+                        chinese={skill.name_zh}
                         english={skill.name}
                     />
                 </h1>
 
                 <div className="skill-description">
                     <BilingualBlock
-                        chinese={skill.description_zh || skill.description}
+                        chinese={skill.description_zh}
                         english={skill.description}
                     />
                 </div>
 
-                <DownloadButton skill={skill} />
+                <div className="action-buttons">
+                    <DownloadButton skill={skill} />
 
-                {skill.html_url && (
-                    <a
-                        href={skill.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="github-link-btn"
-                    >
-                        在 GitHub 上查看 →
-                    </a>
-                )}
+                    {skill.html_url && (
+                        <a
+                            href={skill.html_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="github-link-btn"
+                        >
+                            在 GitHub 上查看 →
+                        </a>
+                    )}
+                </div>
             </div>
 
             {skill.body && (
                 <div className="skill-content">
                     <h2 className="content-title">详细说明</h2>
                     <BilingualBlock
-                        chinese={skill.body_zh || skill.body}
+                        chinese={skill.body_zh}
                         english={skill.body}
+                        isMarkdown={true}
                     />
                 </div>
             )}
