@@ -54,3 +54,4 @@ coverage/
 
 # Misc
 *.local
+translate_skills_deepseek.py

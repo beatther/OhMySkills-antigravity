@@ -8,8 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "fetch": "python3 scripts/fetch_skills.py",
-    "translate": "python3 scripts/translate_skills.py",
-    "translate:full": "python3 scripts/translate_skills_advanced.py"
+    "translate": "python3 scripts/translate_skills_deepseek.py",
+    "translate:dict": "python3 scripts/translate_skills.py",
+    "translate:deepl": "python3 scripts/translate_skills_deeplx.py"
   },
   "dependencies": {
     "file-saver": "^2.0.5",
