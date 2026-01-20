@@ -55,7 +55,16 @@ async function handleDownload(skill, setDownloading) {
 
     try {
         const zip = new JSZip()
-        const skillId = skill.id || skill.name.toLowerCase().replace(/\s+/g, '-')
+
+        // 更安全的文件名净化：仅保留字母、数字、下划线和连字符
+        const rawId = skill.id || skill.name || 'skill'
+        const safeId = rawId.toLowerCase()
+            .replace(/[^a-z0-9\-_]/g, '-')  // 替换所有非安全字符为 -
+            .replace(/-+/g, '-')            // 合并连续的 -
+            .replace(/^-|-$/g, '')          // 去除首尾的 -
+
+        const skillId = safeId || 'skill-package' // 防止空字符串
+
         const skillMd = generateSkillMd(skill)
 
         // Add SKILL.md for each format
